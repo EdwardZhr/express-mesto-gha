@@ -35,7 +35,12 @@ module.exports.deleteCard = (req, res) => {
       }
       res.send({ data: card });
     })
-    .catch((err) => res.status(CodeError.SERVER_ERROR).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
+        return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный _id' });
+      }
+      return res.status(CodeError.SERVER_ERROR).send({ message: err.message });
+    });
 };
 
 module.exports.likeCard = (req, res) => {

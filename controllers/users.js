@@ -13,7 +13,7 @@ module.exports.getUsers = (req, res) => {
 };
 
 module.exports.getUserById = (req, res) => {
-  User.findById(req.params.id)
+  User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
         res.status(CodeError.NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден' });
@@ -21,7 +21,12 @@ module.exports.getUserById = (req, res) => {
       }
       res.send({ data: user });
     })
-    .catch((err) => res.status(CodeError.SERVER_ERROR).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
+        return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный _id' });
+      }
+      return res.status(CodeError.SERVER_ERROR).send({ message: err.message });
+    });
 };
 
 module.exports.createUser = (req, res) => {
