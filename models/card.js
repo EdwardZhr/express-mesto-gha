@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const { mongoose } = require('../config');
 
 const cardSchema = new mongoose.Schema({
   name: {

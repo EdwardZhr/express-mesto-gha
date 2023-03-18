@@ -1,95 +1,79 @@
 const User = require('../models/user');
 
-const CodeError = {
-  NOT_FOUND: '404',
-  SERVER_ERROR: '500',
-  BAD_REQUEST: '400',
-};
+const { NOT_FOUND, SERVER_ERROR, BAD_REQUEST } = require('../utils/constants');
 
-module.exports.getUsers = (req, res) => {
+const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => res.status(CodeError.SERVER_ERROR).send({ message: err.message }));
+    .catch(() => res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' }));
 };
 
-module.exports.getUserById = (req, res) => {
+const getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(CodeError.NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден' });
+        res.status(NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден' });
         return;
       }
       res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный _id' });
+        return res.status(BAD_REQUEST).send({ message: 'Передан некорректный _id' });
       }
-      return res.status(CodeError.SERVER_ERROR).send({ message: err.message });
+      return res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' });
     });
 };
 
-module.exports.createUser = (req, res) => {
+const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
 
   User.create({ name, about, avatar })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(CodeError.BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
+      if (err.name === 'ValidationError') {
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
       }
-      return res.status(CodeError.SERVER_ERROR).send({ message: err.message });
+      return res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' });
     });
 };
 
-module.exports.updateProfile = (req, res) => {
+const updateInfo = (req, res, { name, about, avatar }) => {
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, about, avatar },
+    {
+      new: true,
+      runValidators: true,
+    },
+  )
+    .then((user) => {
+      if (!user) {
+        res.status(NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден' });
+        return;
+      }
+      res.send({ data: user });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+      }
+      return res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' });
+    });
+};
+
+const updateProfile = (req, res) => {
   const { name, about } = req.body;
 
-  User.findByIdAndUpdate(
-    req.user._id,
-    { name, about },
-    {
-      new: true,
-      runValidators: true,
-    },
-  )
-    .then((user) => {
-      if (!user) {
-        res.status(CodeError.NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден' });
-        return;
-      }
-      res.send({ data: user });
-    })
-    .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(CodeError.BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
-      }
-      return res.status(CodeError.SERVER_ERROR).send({ message: err.message });
-    });
+  updateInfo(req, res, { name, about });
 };
 
-module.exports.updateAvatar = (req, res) => {
+const updateAvatar = (req, res) => {
   const { avatar } = req.body;
 
-  User.findByIdAndUpdate(
-    req.user._id,
-    { avatar },
-    {
-      new: true,
-      runValidators: true,
-    },
-  )
-    .then((user) => {
-      if (!user) {
-        res.status(CodeError.NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден' });
-        return;
-      }
-      res.send({ data: user });
-    })
-    .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(CodeError.BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
-      }
-      return res.status(CodeError.SERVER_ERROR).send({ message: err.message });
-    });
+  updateInfo(req, res, { avatar });
+};
+
+module.exports = {
+  getUsers, getUserById, createUser, updateProfile, updateAvatar,
 };

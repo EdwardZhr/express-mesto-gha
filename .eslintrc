@@ -10,16 +10,6 @@
         ]
       }
     ],
-    "no-console": [
-      "error",
-      {
-        "allow": [
-          "log",
-          "warn",
-          "error"
-        ]
-      }
-    ],
     "linebreak-style": 0
   }
 }
