@@ -18,7 +18,7 @@ const getUserById = (req, res) => {
       res.send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res.status(BAD_REQUEST).send({ message: 'Передан некорректный _id' });
       }
       return res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' });
@@ -38,7 +38,9 @@ const createUser = (req, res) => {
     });
 };
 
-const updateInfo = (req, res, { name, about, avatar }) => {
+const updateInfo = (req, res, data) => {
+  const { name, about, avatar } = data;
+
   User.findByIdAndUpdate(
     req.user._id,
     { name, about, avatar },

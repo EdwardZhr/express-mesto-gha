@@ -43,10 +43,10 @@ const deleteCard = (req, res) => {
     });
 };
 
-const likeCard = (req, res) => {
+const updateCard = (req, res, method) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
+    { [method]: { likes: req.user._id } },
     { new: true },
   )
     .populate(['owner', 'likes'])
@@ -65,26 +65,12 @@ const likeCard = (req, res) => {
     });
 };
 
+const likeCard = (req, res) => {
+  updateCard(req, res, '$addToSet');
+};
+
 const dislikeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
-    { new: true },
-  )
-    .populate(['owner', 'likes'])
-    .then((card) => {
-      if (!card) {
-        res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
-        return;
-      }
-      res.send({ data: card });
-    })
-    .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки/снятии лайка' });
-      }
-      return res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' });
-    });
+  updateCard(req, res, '$pull');
 };
 
 module.exports = {
