@@ -20,8 +20,11 @@
   },
   "homepage": "https://github.com/EdwardZhr/express-mesto-gha#readme",
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "express": "^4.18.2",
-    "mongoose": "^7.0.1"
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.1",
+    "validator": "^13.9.0"
   },
   "devDependencies": {
     "eslint": "^8.35.0",
