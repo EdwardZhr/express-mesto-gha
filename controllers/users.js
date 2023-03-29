@@ -2,34 +2,33 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-const {
-  NOT_FOUND, SERVER_ERROR, BAD_REQUEST, UNAUTHORIZED, CONFLICT,
-} = require('../utils/constants');
+const NotFoundError = require('../errors/not-found-err');
+const BadRequestError = require('../errors/bad-request-err');
+const ConflictError = require('../errors/conflict-err');
 
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' }));
+    .catch(next);
 };
 
-const getUserById = (req, res) => {
+const getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден' });
-        return;
+        throw new NotFoundError('Пользователь по указанному _id не найден');
       }
       res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST).send({ message: 'Передан некорректный _id' });
+        next(new BadRequestError('Передан некорректный _id'));
       }
-      return res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' });
+      next(err);
     });
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -40,47 +39,48 @@ const createUser = (req, res) => {
     }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
-      }
       if (err.code === 11000) {
-        res.status(CONFLICT).send({ message: 'Пользователь с таким email уже существует' });
+        next(new ConflictError('Пользователь с таким email уже существует'));
+      } else {
+        next(err);
       }
-      return res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' });
     });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
-      res.send({ token });
+      res
+        .cookie('jwt', token, {
+          maxAge: 3600000,
+          httpOnly: true,
+        });
+      res.send(token);
+      // .end();
     })
-    .catch(() => {
-      res.status(UNAUTHORIZED).send({ message: 'Неправильные почта или пароль' });
-    });
+    .catch(next);
 };
 
-const getUserInfo = (req, res) => {
+const getUserInfo = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден' });
-        return;
+        throw new NotFoundError('Пользователь по указанному _id не найден');
       }
       res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST).send({ message: 'Передан некорректный _id' });
+        next(new BadRequestError('Передан некорректный _id'));
       }
-      return res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' });
+      next(err);
     });
 };
 
-const updateInfo = (req, res, data) => {
+const updateInfo = (req, res, data, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     data,
@@ -91,16 +91,15 @@ const updateInfo = (req, res, data) => {
   )
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден' });
-        return;
+        throw new NotFoundError('Пользователь с указанным _id не найден');
       }
       res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+        next(new BadRequestError('Переданы некорректные данные при обновлении профиля'));
       }
-      return res.status(SERVER_ERROR).send({ message: 'Возникла серверная ошибка' });
+      next(err);
     });
 };
 
