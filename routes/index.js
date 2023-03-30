@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
-const { NOT_FOUND } = require('../utils/constants');
+const NotFoundError = require('../errors/not-found-err');
 const {
   createUser, login,
 } = require('../controllers/users');
@@ -27,8 +27,8 @@ router.use(auth);
 router.use('/users', require('./users'));
 router.use('/cards', require('./cards'));
 
-router.use((req, res) => {
-  res.status(NOT_FOUND).send({ message: 'Страница не найдена' });
+router.use(() => {
+  throw new NotFoundError('Страница не найдена');
 });
 
 module.exports = router;
