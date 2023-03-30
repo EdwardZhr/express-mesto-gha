@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const validator = require('validator');
 
-const UnauthorizeddError = require('../errors/bad-request-err');
+const UnauthorizeddError = require('../errors/unauthorized-err');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.statics.findUserByCredentials = function (email, password, next) {
+userSchema.statics.findUserByCredentials = function (email, password) {
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
@@ -54,8 +54,7 @@ userSchema.statics.findUserByCredentials = function (email, password, next) {
 
           return user;
         });
-    })
-    .catch(next);
+    });
 };
 
 module.exports = mongoose.model('user', userSchema);

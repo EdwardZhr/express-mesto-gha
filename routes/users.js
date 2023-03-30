@@ -18,6 +18,10 @@ router.patch('/me', celebrate({
     about: Joi.string().required().min(2).max(30),
   }),
 }), updateProfile);
-router.patch('/me/avatar', updateAvatar);
+router.patch('/me/avatar', celebrate({
+  body: Joi.object().keys({
+    avatar: Joi.string().regex(/(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*\/?/i),
+  }),
+}), updateAvatar);
 
 module.exports = router;
