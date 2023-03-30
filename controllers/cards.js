@@ -46,7 +46,7 @@ const deleteCard = (req, res, next) => {
     });
 };
 
-const updateCard = (req, res, method, next) => {
+const updateCard = (req, res, next, method) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { [method]: { likes: req.user._id } },
@@ -67,12 +67,12 @@ const updateCard = (req, res, method, next) => {
     });
 };
 
-const likeCard = (req, res) => {
-  updateCard(req, res, '$addToSet');
+const likeCard = (req, res, next) => {
+  updateCard(req, res, next, '$addToSet');
 };
 
-const dislikeCard = (req, res) => {
-  updateCard(req, res, '$pull');
+const dislikeCard = (req, res, next) => {
+  updateCard(req, res, next, '$pull');
 };
 
 module.exports = {
