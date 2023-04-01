@@ -21,9 +21,9 @@ const createCard = (req, res, next) => {
     .then((card) => res.status(CREATED).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Переданы некорректные данные при создании карточки'));
+        return next(new BadRequestError('Переданы некорректные данные при создании карточки'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -41,9 +41,9 @@ const deleteCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Передан некорректный _id'));
+        return next(new BadRequestError('Передан некорректный _id'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -62,9 +62,9 @@ const updateCard = (req, res, next, method) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Переданы некорректные данные для постановки/снятии лайка'));
+        return next(new BadRequestError('Переданы некорректные данные для постановки/снятии лайка'));
       }
-      next(err);
+      return next(err);
     });
 };
 

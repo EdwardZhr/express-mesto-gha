@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { regexLinkValidation } = require('../utils/constants');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -12,7 +13,7 @@ const cardSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator(v) {
-        return /(https?:\/\/|ftps?:\/\/|www\.)((?![.,?!;:()]*(\s|$))[^\s]){2,}/gim.test(v);
+        return regexLinkValidation.test(v);
       },
     },
   },
